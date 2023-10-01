@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1026021401044",
+    "project_id": "socialpixels-dca76",
+    "storage_bucket": "socialpixels-dca76.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026021401044:android:4276e748b7bfd903b43641",
+        "android_client_info": {
+          "package_name": "com.example.tictactoe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArfwye53VPevW-CMv-6H685vTOGq2R1tk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
