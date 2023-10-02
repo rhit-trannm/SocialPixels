@@ -69,16 +69,4 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     );
   }
 }
-void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text('Draw on Canvas')),
-        body: DrawingCanvas(),
-      ),
-    );
-  }
-}
