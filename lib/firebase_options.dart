@@ -49,6 +49,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1026021401044',
     projectId: 'socialpixels-dca76',
     authDomain: 'socialpixels-dca76.firebaseapp.com',
+    databaseURL: 'https://socialpixels-dca76-default-rtdb.firebaseio.com',
     storageBucket: 'socialpixels-dca76.appspot.com',
     measurementId: 'G-Y2P2JMH2KW',
   );
@@ -58,6 +59,7 @@ class DefaultFirebaseOptions {
     appId: '1:1026021401044:android:4276e748b7bfd903b43641',
     messagingSenderId: '1026021401044',
     projectId: 'socialpixels-dca76',
+    databaseURL: 'https://socialpixels-dca76-default-rtdb.firebaseio.com',
     storageBucket: 'socialpixels-dca76.appspot.com',
   );
 
@@ -66,6 +68,7 @@ class DefaultFirebaseOptions {
     appId: '1:1026021401044:ios:488a45a3ed77be54b43641',
     messagingSenderId: '1026021401044',
     projectId: 'socialpixels-dca76',
+    databaseURL: 'https://socialpixels-dca76-default-rtdb.firebaseio.com',
     storageBucket: 'socialpixels-dca76.appspot.com',
     iosBundleId: 'com.example.tictactoe',
   );
@@ -75,6 +78,7 @@ class DefaultFirebaseOptions {
     appId: '1:1026021401044:ios:9854cd13836e7980b43641',
     messagingSenderId: '1026021401044',
     projectId: 'socialpixels-dca76',
+    databaseURL: 'https://socialpixels-dca76-default-rtdb.firebaseio.com',
     storageBucket: 'socialpixels-dca76.appspot.com',
     iosBundleId: 'com.example.tictactoe.RunnerTests',
   );
