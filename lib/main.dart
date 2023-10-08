@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       ),
       // Define routes if multiple pages
       routes: {
-        '/login': (context) => LoginSignupPage(), // login page
+        '/login': (context) => LoginPage(), // login page
         // Add other routes if needed
         // '/home': (context) => HomePage(),
       },
