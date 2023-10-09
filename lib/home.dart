@@ -7,10 +7,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _showCanvas = false; // this variable will determine what to display
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 24, 18, 43),
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Home Page'),
         leading: IconButton(
@@ -26,14 +29,13 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Opacity(
-                    opacity: 0.5,
-                    child: FractionallySizedBox(
-                      widthFactor: 0.5,
-                      heightFactor: 0.5,
+                  Container(
+                    height: MediaQuery.of(context).size.width * 0.3, // 60% of screen width, adjust as neede
+                    width: MediaQuery.of(context).size.width * 0.3,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
                       child: Image.asset(
                         'logo.jpg',
-                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
@@ -55,7 +57,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openDrawer() {
-    Scaffold.of(context).openDrawer();
+    _scaffoldKey.currentState?.openDrawer();
   }
 
   // build the drawer (left panel).
