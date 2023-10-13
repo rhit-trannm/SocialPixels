@@ -60,97 +60,98 @@ class _HomePageState extends State<HomePage> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-  // build the drawer (left panel).
-Widget _buildDrawer() {
-  return Drawer(
-    child: ListView(
-      padding: EdgeInsets.zero,
-      children: <Widget>[
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: Text('Drawer Header'),
-              ),
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: Icon(Icons.add, color: Colors.white), // Add the "+" icon
-                  onPressed: _buildAddCanvasDialog, // Define this method separately
+    // build the drawer (left panel).
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Text('Drawer Header'),
                 ),
-              ),
-            ],
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Icons.add, color: Colors.white), // Add the "+" icon
+                    onPressed: _buildAddCanvasDialog, // Define this method separately
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        ListTile(
-          title: Text('Item 1'),
-          onTap: () {
-            // Close the drawer
-            Navigator.pop(context);
+          ListTile(
+            title: Text('Item 1'),
+            onTap: () {
+              // Close the drawer
+              Navigator.pop(context);
+            },
+          ),
+          // more list tiles or other widgets
+        ],
+      ),
+    );
+  }
+
+  void _buildAddCanvasDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _buildNameEmailDialog(context);
+      },
+    );
+  }
+  Widget _buildNameEmailDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController emailController = TextEditingController();
+
+    return AlertDialog(
+      title: Text('Enter Details'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: 'Canvas Name',
+            ),
+          ),
+          SizedBox(height: 16.0), // Spacing
+          TextField(
+            controller: emailController,
+            decoration: InputDecoration(
+              labelText: 'Invite via Email Address',
+            ),
+            keyboardType: TextInputType.emailAddress,
+          ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          child: Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop();
           },
         ),
-        // more list tiles or other widgets
-      ],
-    ),
-  );
-}
-
-void _buildAddCanvasDialog() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return _buildNameEmailDialog(context);
-    },
-  );
-}
-Widget _buildNameEmailDialog(BuildContext context) {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-
-  return AlertDialog(
-    title: Text('Enter Details'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextField(
-          controller: nameController,
-          decoration: InputDecoration(
-            labelText: 'Canvas Name',
-          ),
-        ),
-        SizedBox(height: 16.0), // Spacing
-        TextField(
-          controller: emailController,
-          decoration: InputDecoration(
-            labelText: 'Invite via Email Address',
-          ),
-          keyboardType: TextInputType.emailAddress,
+        ElevatedButton(
+          child: Text('Submit'),
+          onPressed: () {
+            String name = nameController.text;
+            String email = emailController.text;
+            // Handle the data here, e.g. save it or send it to a server.
+            print('Name: $name, Email: $email');
+            
+            Navigator.of(context).pop(); // Close the dialog.
+          },
         ),
       ],
-    ),
-    actions: [
-      ElevatedButton(
-        child: Text('Cancel'),
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-      ),
-      ElevatedButton(
-        child: Text('Submit'),
-        onPressed: () {
-          String name = nameController.text;
-          String email = emailController.text;
-          // Handle the data here, e.g. save it or send it to a server.
-          print('Name: $name, Email: $email');
-          
-          Navigator.of(context).pop(); // Close the dialog.
-        },
-      ),
-    ],
-  );
+    );
+  }
 }
