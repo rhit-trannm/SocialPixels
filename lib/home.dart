@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:namer_app/draw.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -30,7 +31,8 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    height: MediaQuery.of(context).size.width * 0.3, // 60% of screen width, adjust as neede
+                    height: MediaQuery.of(context).size.width *
+                        0.3, // 60% of screen width, adjust as neede
                     width: MediaQuery.of(context).size.width * 0.3,
                     child: FittedBox(
                       fit: BoxFit.contain,
@@ -60,7 +62,7 @@ class _HomePageState extends State<HomePage> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-    // build the drawer (left panel).
+  // build the drawer (left panel).
   Widget _buildDrawer() {
     return Drawer(
       child: ListView(
@@ -80,8 +82,10 @@ class _HomePageState extends State<HomePage> {
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
-                    icon: Icon(Icons.add, color: Colors.white), // Add the "+" icon
-                    onPressed: _buildAddCanvasDialog, // Define this method separately
+                    icon: Icon(Icons.add,
+                        color: Colors.white), // Add the "+" icon
+                    onPressed:
+                        _buildAddCanvasDialog, // Define this method separately
                   ),
                 ),
               ],
@@ -108,6 +112,7 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
   Widget _buildNameEmailDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
     TextEditingController emailController = TextEditingController();
@@ -142,12 +147,21 @@ class _HomePageState extends State<HomePage> {
         ),
         ElevatedButton(
           child: Text('Submit'),
-          onPressed: () {
+          onPressed: () async {
             String name = nameController.text;
             String email = emailController.text;
             // Handle the data here, e.g. save it or send it to a server.
+
             print('Name: $name, Email: $email');
-            
+            try {
+              await createCanvas(
+                  name); // This will create the canvas using the current authenticated user's email.
+              Navigator.of(context).pop(); // Close the dialog.
+            } catch (error) {
+              // Handle the error e.g. by showing an error message to the user
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to create canvas: $error')));
+            }
             Navigator.of(context).pop(); // Close the dialog.
           },
         ),
