@@ -9,6 +9,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _showCanvas = false; // this variable will determine what to display
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  int _currentDrawerIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -64,41 +65,235 @@ class _HomePageState extends State<HomePage> {
 
   // build the drawer (left panel).
   Widget _buildDrawer() {
+    List<Widget> drawers = [
+      _buildDrawer1(),
+      _buildDrawer2(),
+      _buildDrawer3(),
+    ];
+
+    return Stack(
+      children: <Widget>[
+        Offstage(
+          offstage: _currentDrawerIndex != 0,
+          child: drawers[0],
+        ),
+        Offstage(
+          offstage: _currentDrawerIndex != 1,
+          child: drawers[1],
+        ),
+        Offstage(
+          offstage: _currentDrawerIndex != 2,
+          child: drawers[2],
+        ),
+      ],
+    );
+  }
+
+  void _toggleDrawer(int index) {
+    setState(() {
+      _currentDrawerIndex = index;
+    });
+  }
+
+  Widget _buildDrawer1() {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.center,
-                  child: Text('Drawer Header'),
+          Column(
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
                 ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: Icon(Icons.add,
-                        color: Colors.white), // Add the "+" icon
-                    onPressed:
-                        _buildAddCanvasDialog, // Define this method separately
-                  ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text('Drawer Header'),
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        icon: Icon(Icons.add, color: Colors.white),
+                        onPressed: _buildAddCanvasDialog,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                title: Text('Item 1'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              // Add more items for Drawer 1
+            ],
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.home),
+                  onPressed: () {
+                    _toggleDrawer(0);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () {
+                    _toggleDrawer(1);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.exit_to_app),
+                  onPressed: () {
+                    _toggleDrawer(2);
+                  },
                 ),
               ],
             ),
           ),
-          ListTile(
-            title: Text('Item 1'),
-            onTap: () {
-              // Close the drawer
-              Navigator.pop(context);
-            },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer2() {
+    return Drawer(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text('Drawer Header'),
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        icon: Icon(Icons.add, color: Colors.white),
+                        onPressed: _buildAddCanvasDialog,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                title: Text('Item 1'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              // Add more items for Drawer 2
+            ],
           ),
-          // more list tiles or other widgets
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.home),
+                  onPressed: () {
+                    _toggleDrawer(0);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () {
+                    _toggleDrawer(1);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.exit_to_app),
+                  onPressed: () {
+                    _toggleDrawer(2);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer3() {
+    return Drawer(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text('Drawer Header'),
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        icon: Icon(Icons.add, color: Colors.white),
+                        onPressed: _buildAddCanvasDialog,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                title: Text('Item 1'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              // Add more items for Drawer 1
+            ],
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.home),
+                  onPressed: () {
+                    _toggleDrawer(0);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () {
+                    _toggleDrawer(1);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.exit_to_app),
+                  onPressed: () {
+                    _toggleDrawer(2);
+                  },
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
