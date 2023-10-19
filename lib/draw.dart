@@ -17,7 +17,13 @@ class UCanvas {
   UCanvas({required this.id, required this.name, required this.ownerId});
 }
 
+class Line {
+  final List<Offset> points;
+  final Color color;
+  final double strokeWidth;
 
+  Line({required this.points, this.color = Colors.black, this.strokeWidth = 5.0});
+}
 String _generateCanvasId(String email) {
   final random = Random();
   final randomString = String.fromCharCodes(
@@ -29,26 +35,6 @@ String _generateCanvasId(String email) {
   final digest = md5.convert(bytes);
 
   return digest.toString();
-}
-
-Future<void> createCanvas(String canvasName) async {
-  final user = _auth.currentUser;
-  if (user == null) {
-    throw Exception('User not authenticated');
-  }
-
-  final canvasId = _generateCanvasId(user.email!);
-
-  final newCanvas = UCanvas(
-    id: canvasId,
-    name: canvasName,
-    ownerId: user.uid,
-  );
-
-  await _firestore.collection('canvases').doc(canvasId).set({
-    'name': newCanvas.name,
-    'ownerId': newCanvas.ownerId,
-  });
 }
 Future<List<UCanvas>> fetchCanvases() async {
   final user = _auth.currentUser;
@@ -74,22 +60,127 @@ Future<List<UCanvas>> fetchCanvases() async {
     return canvas;
   }).toList();
 }
+Future<void> createCanvas(String canvasName) async {
+  final user = _auth.currentUser;
+  if (user == null) {
+    throw Exception('User not authenticated');
+  }
 
-class Line {
-  final List<Offset> points;
-  final Color color;
-  final double strokeWidth;
+  final canvasId = _generateCanvasId(user.email!);
 
-  Line({required this.points, this.color = Colors.black, this.strokeWidth = 5.0});
+  final newCanvas = UCanvas(
+    id: canvasId,
+    name: canvasName,
+    ownerId: user.uid,
+  );
+
+  await _firestore.collection('canvases').doc(canvasId).set({
+    'name': newCanvas.name,
+    'ownerId': newCanvas.ownerId,
+  });
+}
+class DrawingCanvas extends StatefulWidget {
+  final String canvasID;
+  DrawingCanvas({required this.canvasID});
+
+  @override
+  _DrawingCanvasState createState() => _DrawingCanvasState();
+}
+
+class _DrawingCanvasState extends State<DrawingCanvas> {
+  
+  List<Line> lines = [];
+  late UCanvas currentCanvas;
+  late StreamSubscription<QuerySnapshot> _canvasSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    currentCanvas = UCanvas(id: widget.canvasID, name: '', ownerId: '');
+    _canvasSubscription = FirebaseFirestore.instance
+        .collection('canvases')
+        .doc(currentCanvas.id)
+        .collection('lines')
+        .orderBy('timestamp')
+        .snapshots()
+        .listen((snapshot) {
+      lines = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Line(
+          points: List.from(data['points'])
+              .map((point) => Offset(point['x'], point['y']))
+              .toList(),
+          color: Color(int.parse(data['color'])),
+          strokeWidth: data['strokeWidth'].toDouble(),
+        );
+      }).toList();
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _canvasSubscription.cancel();
+    super.dispose();
+  }
+
+  void _addLineToFirestore(Line line, String canvasID) async {
+    final canvasId = canvasID;
+    final lineData = {
+      'points': line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
+      'color': line.color.value.toString(),
+      'strokeWidth': line.strokeWidth,
+      'timestamp': FieldValue.serverTimestamp(), // Add a timestamp
+    };
+    try {
+      await _firestore.collection('canvases').doc(canvasId).collection('lines').add(lineData);
+    } catch (e) {
+      print('Error adding line to Firestore: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        final renderBox = context.findRenderObject() as RenderBox;
+        final localPosition = renderBox.globalToLocal(details.globalPosition);
+        final currentLine = (lines.isNotEmpty && lines.last.points.isNotEmpty)
+            ? lines.last
+            : null;
+
+        if (currentLine == null) {
+          final newLine = Line(points: [localPosition]);
+          lines.add(newLine);
+        } else {
+          currentLine.points.add(localPosition);
+        }
+        setState(() {});
+      },
+      onPanEnd: (details) {
+        // Check if the last line has at least one point before saving it
+        if (lines.isNotEmpty && lines.last.points.isNotEmpty) {
+          _addLineToFirestore(lines.last, currentCanvas.id); // Save the completed line
+        }
+        setState(() {});
+      },
+      child: CustomPaint(
+        painter: DrawingPainter(lines: lines),
+        child: Container(),
+      ),
+    );
+  }
 }
 
 class DrawingPainter extends CustomPainter {
   final List<Line> lines;
 
   DrawingPainter({required this.lines});
+
   @override
   void paint(Canvas canvas, Size size) {
     for (var line in lines) {
+      print(line.points.length);
       if (line.points.isEmpty) continue;
       final paint = Paint()
         ..color = line.color
@@ -97,7 +188,7 @@ class DrawingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
       for (int i = 0; i < line.points.length - 1; i++) {
         if (line.points[i] != null && line.points[i + 1] != null)
-        canvas.drawLine(line.points[i], line.points[i + 1], paint);
+          canvas.drawLine(line.points[i], line.points[i + 1], paint);
       }
     }
   }
@@ -107,106 +198,3 @@ class DrawingPainter extends CustomPainter {
     return true;
   }
 }
-
-class DrawingCanvas extends StatefulWidget {
-  final String canvasID;
-  DrawingCanvas({required this.canvasID});
-  @override
-  _DrawingCanvasState createState() => _DrawingCanvasState();
-}
-
-class _DrawingCanvasState extends State<DrawingCanvas> {
-  List<Line> lines = [];
-  StreamSubscription? _canvasSubscription;
-  UCanvas currentCanvas = UCanvas(id: '1', name: 'name', ownerId: 'ownerId');
-  List<UCanvas> canvasList = [];
-  String canvasID = "S";
-  @override
-  void initState() {
-    super.initState();
-    currentCanvas.id = widget.canvasID;
-    _canvasSubscription = FirebaseFirestore.instance
-        .collection('canvases')
-        .doc(currentCanvas.id)
-        .collection('lines')
-        .snapshots()
-        .listen((snapshot) {
-      lines = snapshot.docs.map((doc) => Line(
-        points: (doc.data()['points'] as List)
-            .map((p) => Offset(p['x'], p['y']))
-            .toList(),
-        color: Color(int.parse(doc.data()['color'])),
-        strokeWidth: doc.data()['strokeWidth'].toDouble(),
-      )).toList();
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _canvasSubscription?.cancel();
-    super.dispose();
-  }
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanUpdate: (details) {
-        setState(() {
-          final renderBox = context.findRenderObject() as RenderBox;
-          final localPosition = renderBox.globalToLocal(details.globalPosition);
-          final currentLine = (lines.isNotEmpty && lines.last.points.isNotEmpty)
-              ? lines.last
-              : null;
-
-          if (currentLine == null) {
-            final newLine = Line(points: [localPosition]);
-            lines.add(newLine);
-            _addLineToFirestore(newLine, currentCanvas.id);
-          } else {
-            currentLine.points.add(localPosition);
-            _updateLineInFirestore(currentLine, currentCanvas.id);
-          }
-        });
-      },
-      onPanEnd: (details) {
-        lines.add(Line(points: []));
-      },
-      child: CustomPaint(
-        painter: DrawingPainter(lines: lines),
-        child: Container(),
-      ),
-    );
-  }
-  final _firestore = FirebaseFirestore.instance;
-
-  void _addLineToFirestore(Line line, String canvasID) {
-    final canvasId = canvasID;  
-    final lineData = {
-      'points': line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
-      'color': line.color.value.toString(),  // Saving color as integer value string.
-      'strokeWidth': line.strokeWidth,
-      };
-
-    _firestore.collection('canvases').doc(canvasId).collection('lines').add(lineData);
-  }
-
-  void _updateLineInFirestore(Line line, String canvasID) {
-    final canvasId = canvasID;
-    final random = Random();
-    //final lineId = 'LineID';  // unique ID for each line.
-    final randomString = String.fromCharCodes(
-      List.generate(8, (index) => random.nextInt(33) + 89),
-    );
-    final bytes = utf8.encode(canvasID + randomString); 
-    final digest = md5.convert(bytes);
-    final lineId = digest.toString();
-    final lineData = {
-      'points': line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
-      'color': line.color.value.toString(),
-      'strokeWidth': line.strokeWidth,
-  };
-
-  _firestore.collection('canvases').doc(canvasId).collection('lines').doc(lineId).update(lineData);
-  }
-}
-
