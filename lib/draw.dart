@@ -30,7 +30,7 @@ String _generateCanvasId(String email) {
     List.generate(8, (index) => random.nextInt(33) + 89),
   );
 
-  // Using md5 to hash the email address
+  // hash email address
   final bytes = utf8.encode(email + randomString); 
   final digest = md5.convert(bytes);
 
@@ -54,7 +54,6 @@ Future<List<UCanvas>> fetchCanvases() async {
       ownerId: doc.data()['ownerId'],
     );
 
-    // Print the canvas name to the debug log
     print('Canvas Name: ${canvas.name}');
 
     return canvas;
@@ -92,7 +91,8 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   List<Line> lines = [];
   late UCanvas currentCanvas;
   late StreamSubscription<QuerySnapshot> _canvasSubscription;
-
+  final int threshold = 6;
+  int totalPoints = 1;
   @override
   void initState() {
     super.initState();
@@ -130,7 +130,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       'points': line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
       'color': line.color.value.toString(),
       'strokeWidth': line.strokeWidth,
-      'timestamp': FieldValue.serverTimestamp(), // Add a timestamp
+      'timestamp': FieldValue.serverTimestamp(), //timestamp
     };
     try {
       await _firestore.collection('canvases').doc(canvasId).collection('lines').add(lineData);
@@ -150,9 +150,14 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       onPanUpdate: (details) {
         final renderBox = context.findRenderObject() as RenderBox;
         final localPosition = renderBox.globalToLocal(details.globalPosition);
-        
-        // Only add the point to the last line (since we're sure it's initialized in onPanDown)
-        lines.last.points.add(localPosition);
+        if(totalPoints %  threshold == 0){
+          lines.last.points.add(localPosition);
+          totalPoints = 1;
+        }else{
+          totalPoints++;
+        }
+        // Only add the point to the last line, since it's initialized in onPanDown
+        // lines.last.points.add(localPosition);
 
         setState(() {});
       },
