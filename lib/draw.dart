@@ -142,27 +142,22 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onPanDown: (details) {
+        // When the user starts drawing, add a new empty line
+        lines.add(Line(points: []));
+      },
+
       onPanUpdate: (details) {
         final renderBox = context.findRenderObject() as RenderBox;
         final localPosition = renderBox.globalToLocal(details.globalPosition);
-        final currentLine = (lines.isNotEmpty && lines.last.points.isNotEmpty)
-            ? lines.last
-            : null;
+        
+        // Only add the point to the last line (since we're sure it's initialized in onPanDown)
+        lines.last.points.add(localPosition);
 
-        if (currentLine == null) {
-          final newLine = Line(points: [localPosition]);
-          lines.add(newLine);
-        } else {
-          currentLine.points.add(localPosition);
-        }
         setState(() {});
       },
       onPanEnd: (details) {
-        // Check if the last line has at least one point before saving it
-        if (lines.isNotEmpty && lines.last.points.isNotEmpty) {
-          _addLineToFirestore(lines.last, currentCanvas.id); // Save the completed line
-        }
-        setState(() {});
+        _addLineToFirestore(lines.last, currentCanvas.id);
       },
       child: CustomPaint(
         painter: DrawingPainter(lines: lines),
