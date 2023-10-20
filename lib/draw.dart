@@ -22,8 +22,12 @@ class Line {
   final Color color;
   final double strokeWidth;
 
-  Line({required this.points, this.color = Colors.black, this.strokeWidth = 5.0});
+  Line(
+      {required this.points,
+      this.color = Colors.black,
+      this.strokeWidth = 5.0});
 }
+
 String _generateCanvasId(String email) {
   final random = Random();
   final randomString = String.fromCharCodes(
@@ -31,11 +35,12 @@ String _generateCanvasId(String email) {
   );
 
   // hash email address
-  final bytes = utf8.encode(email + randomString); 
+  final bytes = utf8.encode(email + randomString);
   final digest = md5.convert(bytes);
 
   return digest.toString();
 }
+
 Future<List<UCanvas>> fetchCanvases() async {
   final user = _auth.currentUser;
   if (user == null) {
@@ -59,7 +64,8 @@ Future<List<UCanvas>> fetchCanvases() async {
     return canvas;
   }).toList();
 }
-Future<void> createCanvas(String canvasName) async {
+
+Future<String> createCanvas(String canvasName) async {
   final user = _auth.currentUser;
   if (user == null) {
     throw Exception('User not authenticated');
@@ -77,7 +83,9 @@ Future<void> createCanvas(String canvasName) async {
     'name': newCanvas.name,
     'ownerId': newCanvas.ownerId,
   });
+  return canvasId;
 }
+
 class DrawingCanvas extends StatefulWidget {
   final String canvasID;
   DrawingCanvas({required this.canvasID});
@@ -87,7 +95,6 @@ class DrawingCanvas extends StatefulWidget {
 }
 
 class _DrawingCanvasState extends State<DrawingCanvas> {
-  
   List<Line> lines = [];
   late UCanvas currentCanvas;
   late StreamSubscription<QuerySnapshot> _canvasSubscription;
@@ -127,13 +134,18 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   void _addLineToFirestore(Line line, String canvasID) async {
     final canvasId = canvasID;
     final lineData = {
-      'points': line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
+      'points':
+          line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
       'color': line.color.value.toString(),
       'strokeWidth': line.strokeWidth,
       'timestamp': FieldValue.serverTimestamp(), //timestamp
     };
     try {
-      await _firestore.collection('canvases').doc(canvasId).collection('lines').add(lineData);
+      await _firestore
+          .collection('canvases')
+          .doc(canvasId)
+          .collection('lines')
+          .add(lineData);
     } catch (e) {
       print('Error adding line to Firestore: $e');
     }
@@ -146,19 +158,17 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
         // When the user starts drawing, add a new empty line
         lines.add(Line(points: []));
       },
-
       onPanUpdate: (details) {
         final renderBox = context.findRenderObject() as RenderBox;
         final localPosition = renderBox.globalToLocal(details.globalPosition);
-        if(totalPoints %  threshold == 0){
+        if (totalPoints % threshold == 0) {
           lines.last.points.add(localPosition);
           totalPoints = 1;
-        }else{
+        } else {
           totalPoints++;
         }
         // Only add the point to the last line, since it's initialized in onPanDown
         // lines.last.points.add(localPosition);
-
         setState(() {});
       },
       onPanEnd: (details) {

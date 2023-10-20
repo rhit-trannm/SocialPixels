@@ -42,15 +42,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        fetchCanvases();
-                        _showCanvas = true;
-                      });
-                    },
-                    child: Text('Switch to Canvas'),
-                  ),
                 ],
               ),
             ),
@@ -375,19 +366,27 @@ class _HomePageState extends State<HomePage> {
           onPressed: () async {
             String name = nameController.text;
             String email = emailController.text;
-            // Handle the data here, e.g. save it or send it to a server.
-
+            late String genCanvasId;
             print('Name: $name, Email: $email');
             try {
-              await createCanvas(
+              genCanvasId = await createCanvas(
                   name); // This will create the canvas using the current authenticated user's email.
-              Navigator.of(context).pop(); // Close the dialog.
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) {
+                    return DrawingCanvas(canvasID: genCanvasId);
+                  },
+                ),
+              );
+              // setState(() {
+              //   Navigator.of(context).pop(); // Close the dialog.
+              // });
             } catch (error) {
               // Handle the error e.g. by showing an error message to the user
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Failed to create canvas: $error')));
             }
-            Navigator.of(context).pop(); // Close the dialog.
+            // Navigator.of(context).pop(); // Close the dialog.
           },
         ),
       ],
