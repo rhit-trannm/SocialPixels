@@ -7,10 +7,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _showCanvas = false; // this variable will determine what to display
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentDrawerIndex = 0;
-
+  String? _canvasID;
+  late DrawingCanvas a;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,29 +24,31 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: _buildDrawer(),
-      body: Stack(
-        children: <Widget>[
-          if (!_showCanvas)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    height: MediaQuery.of(context).size.width *
-                        0.3, // 60% of screen width, adjust as neede
-                    width: MediaQuery.of(context).size.width * 0.3,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Image.asset(
-                        'logo.jpg',
+      body: _canvasID != null
+          ? a = DrawingCanvas(
+              key: ValueKey(_canvasID),
+              canvasID:
+                  _canvasID!) // If _canvasID is set, create a new DrawingCanvas widget
+          : Stack(
+              // Else, show original content
+              children: <Widget>[
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: MediaQuery.of(context).size.width * 0.3,
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: Image.asset('logo.jpg'),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-        ],
-      ),
     );
   }
 
@@ -254,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                 future: fetchCanvases(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    // While waiting for data, you can show a loading indicator.
+                    // loading indicator.
                     return CircularProgressIndicator();
                   } else if (snapshot.hasError) {
                     // If there's an error fetching data, you can display an error message.
@@ -272,14 +274,15 @@ class _HomePageState extends State<HomePage> {
                         return ListTile(
                           title: Text(canvas.name),
                           onTap: () {
-                            // Handle tap on canvas
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (BuildContext context) {
-                                  return DrawingCanvas(canvasID: canvas.id);
-                                },
-                              ),
-                            );
+                            setState(() {
+                              _canvasID = null;
+                            });
+                            setState(() {
+                              _canvasID = canvas.id;
+                              a = DrawingCanvas(canvasID: _canvasID!);
+                              print(_canvasID);
+                            });
+                            Navigator.of(context).pop();
                           },
                         );
                       },

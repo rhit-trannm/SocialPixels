@@ -88,7 +88,7 @@ Future<String> createCanvas(String canvasName) async {
 
 class DrawingCanvas extends StatefulWidget {
   final String canvasID;
-  DrawingCanvas({required this.canvasID});
+  DrawingCanvas({Key? key, required this.canvasID}) : super(key: key);
 
   @override
   _DrawingCanvasState createState() => _DrawingCanvasState();
