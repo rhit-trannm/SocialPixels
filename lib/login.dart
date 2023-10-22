@@ -48,8 +48,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width * 0.3;
+
     return Scaffold(
       appBar: AppBar(title: Text("Login")),
+      backgroundColor: Color.fromRGBO(38, 28, 63, 1), // Set the background color
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
@@ -57,23 +60,37 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                Container(
+                  width: width, // Set width to 80% of screen width
+                  child: TextField(
+                    controller: _emailController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      fillColor: Color.fromRGBO(99,89,133,1),
+                      filled: true,
+                      labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
                 ),
                 SizedBox(height: 12),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                Container(
+                  width: width, // Set width to 80% of screen width
+                  child: TextField(
+                    controller: _passwordController,
+                    style: TextStyle(color: Colors.white),
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      fillColor: Color.fromRGBO(99,89,133,1),
+                      filled: true,
+                      labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
                 ),
@@ -110,6 +127,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
 
 class SignupPage extends StatefulWidget {
   @override

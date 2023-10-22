@@ -14,7 +14,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 24, 18, 43),
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Home Page'),
@@ -24,33 +23,50 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: _buildDrawer(),
-      body: _canvasID != null
-          ? a = DrawingCanvas(
-              key: ValueKey(_canvasID),
-              canvasID:
-                  _canvasID!) // If _canvasID is set, create a new DrawingCanvas widget
-          : Stack(
-              // Else, show original content
-              children: <Widget>[
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: MediaQuery.of(context).size.width * 0.3,
-                        width: MediaQuery.of(context).size.width * 0.3,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: Image.asset('logo.jpg'),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromRGBO(54, 38, 87, 1),
+              Color.fromRGBO(54, 39 ,82 ,1),
+              Color.fromRGBO(51, 36, 77, 1),
+              Color.fromRGBO(47, 35, 75, 1),
+              Color.fromRGBO(38, 27, 61, 1),
+              Color.fromRGBO(38, 28, 65, 1),
+            ],
+          ),
+        ),
+        child: _canvasID != null
+            ? a = DrawingCanvas(
+                key: ValueKey(_canvasID),
+                canvasID:
+                    _canvasID!) // If _canvasID is set, create a new DrawingCanvas widget
+            : Stack(
+                // Else, show original content
+                children: <Widget>[
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: MediaQuery.of(context).size.width * 0.3,
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: Image.asset('logo.png'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
+
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
