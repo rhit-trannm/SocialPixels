@@ -184,7 +184,6 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
 
 class DrawingPainter extends CustomPainter {
   final List<Line> lines;
-
   DrawingPainter({required this.lines});
 
   @override

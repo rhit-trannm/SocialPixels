@@ -9,7 +9,8 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Sign up with email & password
-  Future<User?> signUp(String email, String password, String displayName) async {
+  Future<User?> signUp(
+      String email, String password, String displayName) async {
     try {
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
@@ -49,43 +50,66 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Login")),
-      body: Column(
-        children: <Widget>[
-          TextField(
-            controller: _emailController,
-            decoration: InputDecoration(labelText: 'Email'),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    var user = await _authService.login(
+                        _emailController.text, _passwordController.text);
+                    if (user != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomePage()),
+                      );
+                    } else {
+                      print("Failed to sign up");
+                    }
+                  },
+                  child: Text("Login"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignupPage()),
+                    );
+                  },
+                  child: Text("Don't have an account? Sign Up"),
+                ),
+              ],
+            ),
           ),
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(labelText: 'Password'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              var user = await _authService.login(_emailController.text, _passwordController.text);
-              if (user != null) {
-                  Navigator.push(context,MaterialPageRoute(builder: (context) => HomePage()),);
-                } else {
-                  print("Failed to sign up");
-                }
-            },
-            child: Text("Login"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SignupPage()),
-              );
-            },
-            child: Text("Don't have an account? Sign Up"),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
-
 
 class SignupPage extends StatefulWidget {
   @override
@@ -119,13 +143,17 @@ class _SignupPageState extends State<SignupPage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              var user = await _authService.signUp(_emailController.text, _passwordController.text, _displayNameController.text);
+              var user = await _authService.signUp(_emailController.text,
+                  _passwordController.text, _displayNameController.text);
               if (user != null) {
-                  print("Successfully signed up with user id ${user.uid}");
-                  Navigator.push(context,MaterialPageRoute(builder: (context) => SignupPage()),);
-                } else {
-                  print("Failed to sign up");
-                }
+                print("Successfully signed up with user id ${user.uid}");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SignupPage()),
+                );
+              } else {
+                print("Failed to sign up");
+              }
             },
             child: Text("Sign Up"),
           ),
