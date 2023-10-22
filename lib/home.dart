@@ -227,96 +227,94 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDrawer3() {
     return Drawer(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Align(
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                    ),
+                    child: Stack(
                       alignment: Alignment.center,
-                      child: Text('Drawer Header'),
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text('Drawer Header'),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: IconButton(
+                            icon: Icon(Icons.add, color: Colors.white),
+                            onPressed: _buildAddCanvasDialog,
+                          ),
+                        ),
+                      ],
                     ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: Icon(Icons.add, color: Colors.white),
-                        onPressed: _buildAddCanvasDialog,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              FutureBuilder<List<UCanvas>>(
-                future: fetchCanvases(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    // loading indicator.
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    // If there's an error fetching data, you can display an error message.
-                    return Text('Error: ${snapshot.error}');
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    // If there are no canvases, you can display a message.
-                    return Text('No canvases available');
-                  } else {
-                    // If data is available, create a list of ListTile widgets.
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final canvas = snapshot.data![index];
-                        return ListTile(
-                          title: Text(canvas.name),
-                          onTap: () {
-                            setState(() {
-                              _canvasID = null;
-                            });
-                            setState(() {
-                              _canvasID = canvas.id;
-                              a = DrawingCanvas(canvasID: _canvasID!);
-                              print(_canvasID);
-                            });
-                            Navigator.of(context).pop();
+                  ),
+                  FutureBuilder<List<UCanvas>>(
+                    future: fetchCanvases(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Text('No canvases available');
+                      } else {
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics:
+                              NeverScrollableScrollPhysics(), // Important! This will keep inner ListView from interfering with the outer SingleChildScrollView.
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final canvas = snapshot.data![index];
+                            return ListTile(
+                              title: Text(canvas.name),
+                              onTap: () {
+                                setState(() {
+                                  _canvasID = null;
+                                });
+                                setState(() {
+                                  _canvasID = canvas.id;
+                                  a = DrawingCanvas(canvasID: _canvasID!);
+                                  print(_canvasID);
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            );
                           },
                         );
-                      },
-                    );
-                  }
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                icon: Icon(Icons.home),
+                onPressed: () {
+                  _toggleDrawer(0);
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.settings),
+                onPressed: () {
+                  _toggleDrawer(1);
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.account_circle),
+                onPressed: () {
+                  _toggleDrawer(2);
                 },
               ),
             ],
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.home),
-                  onPressed: () {
-                    _toggleDrawer(0);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.settings),
-                  onPressed: () {
-                    _toggleDrawer(1);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.account_circle),
-                  onPressed: () {
-                    _toggleDrawer(2);
-                  },
-                ),
-              ],
-            ),
           ),
         ],
       ),
