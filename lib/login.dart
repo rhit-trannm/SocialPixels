@@ -142,40 +142,98 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width * 0.3;
+
     return Scaffold(
       appBar: AppBar(title: Text("Sign Up")),
-      body: Column(
-        children: <Widget>[
-          TextField(
-            controller: _displayNameController,
-            decoration: InputDecoration(labelText: 'Display Name'),
+      backgroundColor: Color.fromRGBO(38, 28, 63, 1),  // Set the background color
+      body: SingleChildScrollView(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: width, // Set width to 80% of screen width
+                  child: TextField(
+                    controller: _displayNameController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      fillColor: Color.fromRGBO(99, 89, 133, 1),
+                      filled: true,
+                      labelText: 'Display Name',
+                      labelStyle: TextStyle(color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                Container(
+                  width: width, // Set width to 80% of screen width
+                  child: TextField(
+                    controller: _emailController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      fillColor: Color.fromRGBO(99, 89, 133, 1),
+                      filled: true,
+                      labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                Container(
+                  width: width, // Set width to 80% of screen width
+                  child: TextField(
+                    controller: _passwordController,
+                    style: TextStyle(color: Colors.white),
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      fillColor: Color.fromRGBO(99, 89, 133, 1),
+                      filled: true,
+                      labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    var user = await _authService.signUp(
+                        _emailController.text,
+                        _passwordController.text,
+                        _displayNameController.text);
+                    if (user != null) {
+                      print("Successfully signed up with user id ${user.uid}");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomePage()),
+                      );
+                    } else {
+                      print("Failed to sign up");
+                    }
+                  },
+                  child: Text("Sign Up"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("Already have an account? Login"),
+                ),
+              ],
+            ),
           ),
-          TextField(
-            controller: _emailController,
-            decoration: InputDecoration(labelText: 'Email'),
-          ),
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(labelText: 'Password'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              var user = await _authService.signUp(_emailController.text,
-                  _passwordController.text, _displayNameController.text);
-              if (user != null) {
-                print("Successfully signed up with user id ${user.uid}");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SignupPage()),
-                );
-              } else {
-                print("Failed to sign up");
-              }
-            },
-            child: Text("Sign Up"),
-          ),
-        ],
+        ),
       ),
     );
   }
