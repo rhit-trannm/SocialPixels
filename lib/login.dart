@@ -4,9 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:namer_app/draw.dart';
 import 'package:namer_app/firebase_options.dart';
 import 'package:namer_app/home.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Sign up with email & password
   Future<User?> signUp(
@@ -16,6 +18,28 @@ class AuthService {
           .createUserWithEmailAndPassword(email: email, password: password);
 
       await userCredential.user!.updateDisplayName(displayName);
+
+      // Create a new user document in Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'displayName': displayName,
+        'email': email,
+        'uuid': userCredential.user!.uid,
+        'friends': [], // an empty list of friends to begin with
+      });
+      await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .collection('canvases')
+          .add({});
+      //Firestore creates an empty entry into canvases that bugs the load up homescreen.
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .collection('canvases')
+          .get();
+      for (QueryDocumentSnapshot documentSnapshot in querySnapshot.docs) {
+        await documentSnapshot.reference.delete();
+      }
       return userCredential.user;
     } catch (e) {
       print(e.toString());
@@ -27,12 +51,17 @@ class AuthService {
   Future<User?> login(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: "slippinice@gmail.com", password: "123456");
+          email: email, password: password);
       return userCredential.user;
     } catch (e) {
       print(e.toString());
       return null;
     }
+  }
+
+  // Fetch user data from Firestore
+  Future<DocumentSnapshot> fetchUserData(String uid) async {
+    return await _firestore.collection('users').doc(uid).get();
   }
 }
 
@@ -52,7 +81,8 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text("Login")),
-      backgroundColor: Color.fromRGBO(38, 28, 63, 1), // Set the background color
+      backgroundColor:
+          Color.fromRGBO(38, 28, 63, 1), // Set the background color
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
@@ -66,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _emailController,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      fillColor: Color.fromRGBO(99,89,133,1),
+                      fillColor: Color.fromRGBO(99, 89, 133, 1),
                       filled: true,
                       labelText: 'Email',
                       labelStyle: TextStyle(color: Colors.white),
@@ -84,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(color: Colors.white),
                     obscureText: true,
                     decoration: InputDecoration(
-                      fillColor: Color.fromRGBO(99,89,133,1),
+                      fillColor: Color.fromRGBO(99, 89, 133, 1),
                       filled: true,
                       labelText: 'Password',
                       labelStyle: TextStyle(color: Colors.white),
@@ -128,7 +158,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-
 class SignupPage extends StatefulWidget {
   @override
   _SignupPageState createState() => _SignupPageState();
@@ -146,7 +175,8 @@ class _SignupPageState extends State<SignupPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text("Sign Up")),
-      backgroundColor: Color.fromRGBO(38, 28, 63, 1),  // Set the background color
+      backgroundColor:
+          Color.fromRGBO(38, 28, 63, 1), // Set the background color
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
@@ -208,10 +238,8 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () async {
-                    var user = await _authService.signUp(
-                        _emailController.text,
-                        _passwordController.text,
-                        _displayNameController.text);
+                    var user = await _authService.signUp(_emailController.text,
+                        _passwordController.text, _displayNameController.text);
                     if (user != null) {
                       print("Successfully signed up with user id ${user.uid}");
                       Navigator.push(

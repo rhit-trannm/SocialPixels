@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:namer_app/draw.dart';
 import 'package:namer_app/friend.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -104,6 +105,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  final currentUserUID = FirebaseAuth.instance.currentUser?.uid;
   Widget _buildDrawer1() {
     return Drawer(
       child: Column(
@@ -124,48 +126,40 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Align(
                       alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: Icon(Icons.add, color: Colors.white),
-                        onPressed: _buildAddCanvasDialog,
+                      child: Column(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.add, color: Colors.white),
+                            onPressed: _buildAddFriendDialog,
+                          ),
+                          IconButton(
+                            // This is the new icon for friend requests
+                            icon: Icon(Icons.mail_outline, color: Colors.white),
+                            onPressed: _showFriendRequestsDialog,
+                          ),
+                        ],
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
               FutureBuilder<List<Map<String, dynamic>>>(
-                future: fetchFriendRequests(),
+                future: fetchFriends(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text('No friend requests available');
+                    return Text('No friends added');
                   } else {
                     return ListView.builder(
                       itemCount: snapshot.data!.length,
                       itemBuilder: (BuildContext context, int index) {
-                        final request = snapshot.data![index];
+                        final friend = snapshot.data![index];
                         return ListTile(
-                          title: Text(request['fromDisplayName']),
-                          subtitle: Text(request['fromEmail']),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
-                                onPressed: () {
-                                  // Accept friend request logic here
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.clear, color: Colors.red),
-                                onPressed: () {
-                                  // Deny friend request logic here
-                                },
-                              ),
-                            ],
-                          ),
+                          title: Text(friend['displayName']),
+                          subtitle: Text(friend['email']),
                         );
                       },
                     );
@@ -202,6 +196,80 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showFriendRequestsDialog() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Friend Requests"),
+          content: Container(
+            width: double.maxFinite,
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: fetchFriendRequests(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Text('No friend requests available');
+                } else {
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final request = snapshot.data![index];
+                      return ListTile(
+                        leading: Icon(Icons.person),
+                        title: Text(request['displayName']),
+                        subtitle: Text(request['email']),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.check, color: Colors.green),
+                              onPressed: () {
+                                acceptFriendRequest(
+                                    FirebaseAuth.instance.currentUser!.uid,
+                                    request['uid']);
+                                setState(() {});
+                                //Navigator.of(context).pop();
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close, color: Colors.red),
+                              onPressed: () {
+                                print("HELLO2");
+                                denyFriendRequest(
+                                    FirebaseAuth.instance.currentUser!.uid,
+                                    request['uid']);
+                                setState(() {});
+                                //Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              child: Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -379,7 +447,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildAddFriendDialog(BuildContext context) {
+  void _buildAddFriendDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _AddFriendDialog(context);
+      },
+    );
+  }
+
+  Widget _AddFriendDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
     TextEditingController emailController = TextEditingController();
 
@@ -389,18 +466,10 @@ class _HomePageState extends State<HomePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            controller: nameController,
-            decoration: InputDecoration(
-              labelText: 'Canvas Name',
-            ),
-          ),
-          SizedBox(height: 16.0), // Spacing
-          TextField(
             controller: emailController,
             decoration: InputDecoration(
-              labelText: 'Invite via Email Address',
+              labelText: 'User email',
             ),
-            keyboardType: TextInputType.emailAddress,
           ),
         ],
       ),
@@ -419,8 +488,7 @@ class _HomePageState extends State<HomePage> {
               await sendFriendRequest(email);
               Navigator.of(context).pop(); // Close the dialog.
             } catch (error) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text('Error: $error')));
+              print(error);
             }
           },
         ),
@@ -468,15 +536,16 @@ class _HomePageState extends State<HomePage> {
             late String genCanvasId;
             print('Name: $name, Email: $email');
             try {
-              genCanvasId = await createCanvas(
-                  name); // This will create the canvas using the current authenticated user's email.
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext context) {
-                    return DrawingCanvas(canvasID: genCanvasId);
-                  },
-                ),
-              );
+              genCanvasId = await createCanvas(name);
+              setState(() {
+                _canvasID = null;
+              });
+              setState(() {
+                _canvasID = genCanvasId;
+                a = DrawingCanvas(canvasID: _canvasID!);
+                print(_canvasID);
+              });
+              Navigator.of(context).pop();
               // setState(() {
               //   Navigator.of(context).pop(); // Close the dialog.
               // });

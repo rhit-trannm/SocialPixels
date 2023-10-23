@@ -48,8 +48,9 @@ Future<List<UCanvas>> fetchCanvases() async {
   }
 
   final canvasQuerySnapshot = await _firestore
+      .collection('users')
+      .doc(user.uid)
       .collection('canvases')
-      .where('ownerId', isEqualTo: user.uid)
       .get();
 
   return canvasQuerySnapshot.docs.map((doc) {
@@ -79,7 +80,12 @@ Future<String> createCanvas(String canvasName) async {
     ownerId: user.uid,
   );
 
-  await _firestore.collection('canvases').doc(canvasId).set({
+  await _firestore
+      .collection('users')
+      .doc(user.uid)
+      .collection('canvases')
+      .doc(canvasId)
+      .set({
     'name': newCanvas.name,
     'ownerId': newCanvas.ownerId,
   });
@@ -98,13 +104,15 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   List<Line> lines = [];
   late UCanvas currentCanvas;
   late StreamSubscription<QuerySnapshot> _canvasSubscription;
-  final int threshold = 6;
+  final int threshold = 10;
   int totalPoints = 1;
   @override
   void initState() {
     super.initState();
     currentCanvas = UCanvas(id: widget.canvasID, name: '', ownerId: '');
     _canvasSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
         .collection('canvases')
         .doc(currentCanvas.id)
         .collection('lines')
@@ -142,6 +150,8 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     };
     try {
       await _firestore
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
           .collection('canvases')
           .doc(canvasId)
           .collection('lines')
