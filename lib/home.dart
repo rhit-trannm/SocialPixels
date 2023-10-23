@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:namer_app/draw.dart';
+import 'package:namer_app/friend.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -30,7 +31,7 @@ class _HomePageState extends State<HomePage> {
             end: Alignment.bottomRight,
             colors: [
               Color.fromRGBO(54, 38, 87, 1),
-              Color.fromRGBO(54, 39 ,82 ,1),
+              Color.fromRGBO(54, 39, 82, 1),
               Color.fromRGBO(51, 36, 77, 1),
               Color.fromRGBO(47, 35, 75, 1),
               Color.fromRGBO(38, 27, 61, 1),
@@ -66,7 +67,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
@@ -132,13 +132,46 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              ListTile(
-                title: Text('Item 1'),
-                onTap: () {
-                  Navigator.pop(context);
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: fetchFriendRequests(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text('No friend requests available');
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final request = snapshot.data![index];
+                        return ListTile(
+                          title: Text(request['fromDisplayName']),
+                          subtitle: Text(request['fromEmail']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.check, color: Colors.green),
+                                onPressed: () {
+                                  // Accept friend request logic here
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.clear, color: Colors.red),
+                                onPressed: () {
+                                  // Deny friend request logic here
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }
                 },
-              ),
-              // Add more items for Drawer 1
+              )
             ],
           ),
           Align(
@@ -343,6 +376,55 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return _buildNameEmailDialog(context);
       },
+    );
+  }
+
+  Widget _buildAddFriendDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController emailController = TextEditingController();
+
+    return AlertDialog(
+      title: Text('Enter Details'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: 'Canvas Name',
+            ),
+          ),
+          SizedBox(height: 16.0), // Spacing
+          TextField(
+            controller: emailController,
+            decoration: InputDecoration(
+              labelText: 'Invite via Email Address',
+            ),
+            keyboardType: TextInputType.emailAddress,
+          ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          child: Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        ElevatedButton(
+          child: Text('Submit'),
+          onPressed: () async {
+            String email = emailController.text;
+            try {
+              await sendFriendRequest(email);
+              Navigator.of(context).pop(); // Close the dialog.
+            } catch (error) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text('Error: $error')));
+            }
+          },
+        ),
+      ],
     );
   }
 
