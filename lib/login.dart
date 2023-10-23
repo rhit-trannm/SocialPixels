@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                 ElevatedButton(
                   onPressed: () async {
                     var user = await _authService.login(
-                        _emailController.text, _passwordController.text);
+                        "2@gmail.com", "1234567");
                     if (user != null) {
                       Navigator.push(
                         context,

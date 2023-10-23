@@ -111,62 +111,68 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text('Drawer Header'),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
                     ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Column(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.add, color: Colors.white),
-                            onPressed: _buildAddFriendDialog,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text('Drawer Header'),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Column(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.add, color: Colors.white),
+                                onPressed: _buildAddFriendDialog,
+                              ),
+                              IconButton(
+                                // This is the new icon for friend requests
+                                icon: Icon(Icons.mail_outline, color: Colors.white),
+                                onPressed: _showFriendRequestsDialog,
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            // This is the new icon for friend requests
-                            icon: Icon(Icons.mail_outline, color: Colors.white),
-                            onPressed: _showFriendRequestsDialog,
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: fetchFriends(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text('No friends added');
-                  } else {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final friend = snapshot.data![index];
-                        return ListTile(
-                          title: Text(friend['displayName']),
-                          subtitle: Text(friend['email']),
+                        )
+                      ],
+                    ),
+                  ),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: fetchFriends(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Text('No friends added');
+                      } else {
+                        return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemBuilder: (BuildContext context, int index) {
+                            final friend = snapshot.data![index];
+                            return ListTile(
+                              title: Text(friend['displayName']),
+                              subtitle: Text(friend['email']),
+                            );
+                          },
                         );
-                      },
-                    );
-                  }
-                },
-              )
-            ],
+                      }
+                    },
+                  )
+                ],
+              ),
+            ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -232,23 +238,24 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             IconButton(
                               icon: Icon(Icons.check, color: Colors.green),
-                              onPressed: () {
-                                acceptFriendRequest(
+                              onPressed: () async {
+                                print(request.toString());
+                                await acceptFriendRequest(
                                     FirebaseAuth.instance.currentUser!.uid,
                                     request['uid']);
                                 setState(() {});
-                                //Navigator.of(context).pop();
+                                Navigator.of(context).pop();
                               },
                             ),
                             IconButton(
                               icon: Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
+                              onPressed: () async {
                                 print("HELLO2");
-                                denyFriendRequest(
+                                await denyFriendRequest(
                                     FirebaseAuth.instance.currentUser!.uid,
                                     request['uid']);
                                 setState(() {});
-                                //Navigator.of(context).pop();
+                                Navigator.of(context).pop();
                               },
                             ),
                           ],

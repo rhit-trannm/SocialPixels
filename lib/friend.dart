@@ -35,6 +35,7 @@ Future<void> sendFriendRequest(String emailToSendRequest) async {
       .set({
     'displayName': currentUser.displayName,
     'email': currentUser.email,
+    'uid': currentUser.uid,
     'sentAt': Timestamp.now(),
   });
 }
@@ -53,8 +54,11 @@ Future<List<Map<String, dynamic>>> fetchFriendRequests() async {
       .collection('friendRequests')
       .get();
 
+
+  // This line maps each document to its data and then converts the result into a list
   return querySnapshot.docs.map((doc) => doc.data()).toList();
 }
+
 
 Future<List<Map<String, dynamic>>> fetchFriends() async {
   List<Map<String, dynamic>> friendList = [];
@@ -94,9 +98,11 @@ Future<List<Map<String, dynamic>>> fetchFriends() async {
       friendList.add({
         'displayName': friendData['displayName'],
         'email': friendData['email'],
+        'uid': friendUID,
       });
     }
   }
+  print(friendList.toString());
 
   return friendList;
 }
@@ -107,21 +113,13 @@ Future<void> acceptFriendRequest(
     String currentUserUID, String requesterUID) async {
   print("HELLO");
   CollectionReference users = _firestore.collection('users');
-
-  // Remove requester's UID from the current user's friendRequests list
-  print("done1");
-  await users.doc(currentUserUID).update({
-    'friendRequests': FieldValue.arrayRemove([requesterUID])
-  });
-  print("done2");
-  // Add requester's UID to the current user's friends list
-  await users.doc(currentUserUID).update({
-    'friends': FieldValue.arrayUnion([requesterUID])
-  });
-  print("done3");
-  // Add the current user's UID to the requester's friends list
-  await users.doc(requesterUID).update({
-    'friends': FieldValue.arrayUnion([currentUserUID])
+  return _firestore.runTransaction((transaction) async {
+    // Remove requester's UID from the current user's friendRequests list
+    transaction.delete(users.doc(currentUserUID).collection('friendRequests').doc(requesterUID));
+    // Add requester's UID to the current user's friends list
+    transaction.update(users.doc(currentUserUID), {'friends': FieldValue.arrayUnion([requesterUID])});
+    // Add the current user's UID to the requester's friends list
+    transaction.update(users.doc(requesterUID), {'friends': FieldValue.arrayUnion([currentUserUID])});
   });
 }
 
@@ -132,11 +130,7 @@ Future<void> denyFriendRequest(
   // Transaction for data consistency
   return _firestore.runTransaction((transaction) async {
     // Remove requester's UID from the current user's friendRequests list
-    transaction.update(
-      users.doc(currentUserUID),
-      {
-        'friendRequests': FieldValue.arrayRemove([requesterUID])
-      },
-    );
+
+    transaction.delete(users.doc(currentUserUID).collection('friendRequests').doc(requesterUID));
   });
 }
