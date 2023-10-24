@@ -43,8 +43,9 @@ class _HomePageState extends State<HomePage> {
         child: _canvasID != null
             ? a = DrawingCanvas(
                 key: ValueKey(_canvasID),
-                canvasID:
-                    _canvasID!) // If _canvasID is set, create a new DrawingCanvas widget
+                canvasID: _canvasID!,
+                uid: FirebaseAuth.instance.currentUser!
+                    .uid) // If _canvasID is set, create a new DrawingCanvas widget
             : Stack(
                 // Else, show original content
                 children: <Widget>[
@@ -106,6 +107,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   final currentUserUID = FirebaseAuth.instance.currentUser?.uid;
+
   Widget _buildDrawer1() {
     return Drawer(
       child: Column(
@@ -135,8 +137,8 @@ class _HomePageState extends State<HomePage> {
                                 onPressed: _buildAddFriendDialog,
                               ),
                               IconButton(
-                                // This is the new icon for friend requests
-                                icon: Icon(Icons.mail_outline, color: Colors.white),
+                                icon: Icon(Icons.mail_outline,
+                                    color: Colors.white),
                                 onPressed: _showFriendRequestsDialog,
                               ),
                             ],
@@ -161,9 +163,52 @@ class _HomePageState extends State<HomePage> {
                           physics: NeverScrollableScrollPhysics(),
                           itemBuilder: (BuildContext context, int index) {
                             final friend = snapshot.data![index];
-                            return ListTile(
+                            return ExpansionTile(
                               title: Text(friend['displayName']),
                               subtitle: Text(friend['email']),
+                              children: <Widget>[
+                                FutureBuilder<List<UCanvas>>(
+                                  future: fetchFriendCanvases(friend['uid']),
+                                  builder: (context, canvasSnapshot) {
+                                    if (canvasSnapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return CircularProgressIndicator();
+                                    } else if (canvasSnapshot.hasError) {
+                                      return Text(
+                                          'Error: ${canvasSnapshot.error}');
+                                    } else if (!canvasSnapshot.hasData ||
+                                        canvasSnapshot.data!.isEmpty) {
+                                      return Text('No canvases available');
+                                    } else {
+                                      return ListView.builder(
+                                        itemCount: canvasSnapshot.data!.length,
+                                        shrinkWrap: true,
+                                        physics: NeverScrollableScrollPhysics(),
+                                        itemBuilder: (BuildContext context,
+                                            int canvasIndex) {
+                                          final canvas =
+                                              canvasSnapshot.data![canvasIndex];
+                                          return ListTile(
+                                              title: Text(canvas.name),
+                                              onTap: () {
+                                                setState(() {
+                                                  _canvasID = null;
+                                                });
+                                                setState(() {
+                                                  _canvasID = canvas.id;
+                                                  a = DrawingCanvas(
+                                                      canvasID: _canvasID!,
+                                                      uid: friend['uid']);
+                                                  print(_canvasID);
+                                                });
+                                                Navigator.of(context).pop();
+                                              });
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
                             );
                           },
                         );
@@ -402,7 +447,10 @@ class _HomePageState extends State<HomePage> {
                                 });
                                 setState(() {
                                   _canvasID = canvas.id;
-                                  a = DrawingCanvas(canvasID: _canvasID!);
+                                  a = DrawingCanvas(
+                                    canvasID: _canvasID!,
+                                    uid: FirebaseAuth.instance.currentUser!.uid,
+                                  );
                                   print(_canvasID);
                                 });
                                 Navigator.of(context).pop();
@@ -549,7 +597,9 @@ class _HomePageState extends State<HomePage> {
               });
               setState(() {
                 _canvasID = genCanvasId;
-                a = DrawingCanvas(canvasID: _canvasID!);
+                a = DrawingCanvas(
+                    canvasID: _canvasID!,
+                    uid: FirebaseAuth.instance.currentUser!.uid);
                 print(_canvasID);
               });
               Navigator.of(context).pop();

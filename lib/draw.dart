@@ -94,7 +94,9 @@ Future<String> createCanvas(String canvasName) async {
 
 class DrawingCanvas extends StatefulWidget {
   final String canvasID;
-  DrawingCanvas({Key? key, required this.canvasID}) : super(key: key);
+  final String uid;
+  DrawingCanvas({Key? key, required this.canvasID, required this.uid})
+      : super(key: key);
 
   @override
   _DrawingCanvasState createState() => _DrawingCanvasState();
@@ -112,7 +114,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     currentCanvas = UCanvas(id: widget.canvasID, name: '', ownerId: '');
     _canvasSubscription = FirebaseFirestore.instance
         .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .doc(widget.uid)
         .collection('canvases')
         .doc(currentCanvas.id)
         .collection('lines')
@@ -216,4 +218,21 @@ class DrawingPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true;
   }
+}
+
+Future<List<UCanvas>> fetchFriendCanvases(String friendUID) async {
+  final canvasQuerySnapshot = await _firestore
+      .collection('users')
+      .doc(friendUID)
+      .collection('canvases')
+      .get();
+
+  return canvasQuerySnapshot.docs.map((doc) {
+    final canvas = UCanvas(
+      id: doc.id,
+      name: doc.data()['name'],
+      ownerId: doc.data()['ownerId'],
+    );
+    return canvas;
+  }).toList();
 }
