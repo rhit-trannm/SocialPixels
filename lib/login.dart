@@ -80,7 +80,10 @@ class _LoginPageState extends State<LoginPage> {
     double width = MediaQuery.of(context).size.width * 0.3;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(
+        title: Text("Login"),
+        backgroundColor: Color.fromRGBO(69, 49, 109, 1),
+      ),
       backgroundColor:
           Color.fromRGBO(38, 28, 63, 1), // Set the background color
       body: SingleChildScrollView(
@@ -126,9 +129,11 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 12),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      primary: Color.fromRGBO(69, 49, 109, 1)),
                   onPressed: () async {
-                    var user = await _authService.login(
-                        "2@gmail.com", "1234567");
+                    var user =
+                        await _authService.login("2@gmail.com", "1234567");
                     if (user != null) {
                       Navigator.push(
                         context,
@@ -147,7 +152,10 @@ class _LoginPageState extends State<LoginPage> {
                       MaterialPageRoute(builder: (context) => SignupPage()),
                     );
                   },
-                  child: Text("Don't have an account? Sign Up"),
+                  child: Text(
+                    "Don't have an account? Sign Up",
+                    style: TextStyle(color: Color.fromRGBO(160, 139, 201, 1)),
+                  ),
                 ),
               ],
             ),

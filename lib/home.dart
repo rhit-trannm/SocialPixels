@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
+        backgroundColor: Color.fromRGBO(69, 49, 109, 1),
         title: Text('Home Page'),
         leading: IconButton(
           icon: Icon(Icons.menu),
@@ -112,34 +113,41 @@ class _HomePageState extends State<HomePage> {
             child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
-                  DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.center,
-                          child: Text('Drawer Header'),
-                        ),
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: Column(
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.add, color: Colors.white),
-                                onPressed: _buildAddFriendDialog,
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.mail_outline,
-                                    color: Colors.white),
-                                onPressed: _showFriendRequestsDialog,
-                              ),
-                            ],
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.15,
+                    child: DrawerHeader(
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Text('Friends'),
                           ),
-                        )
-                      ],
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: Column(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.add, color: Colors.white),
+                                  iconSize:
+                                      MediaQuery.of(context).size.height * 0.02,
+                                  onPressed: _buildAddFriendDialog,
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.mail_outline,
+                                      color: Colors.white),
+                                  iconSize:
+                                      MediaQuery.of(context).size.height * 0.02,
+                                  onPressed: _showFriendRequestsDialog,
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                   FutureBuilder<List<Map<String, dynamic>>>(
@@ -314,74 +322,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDrawer2() {
-    return Drawer(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text('Drawer Header'),
-                    ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: Icon(Icons.add, color: Colors.white),
-                        onPressed: _buildAddCanvasDialog,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ListTile(
-                title: Text('Item 1'),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-              // Add more items for Drawer 2
-            ],
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.home),
-                  onPressed: () {
-                    _toggleDrawer(0);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.settings),
-                  onPressed: () {
-                    _toggleDrawer(1);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.account_circle),
-                  onPressed: () {
-                    _toggleDrawer(2);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDrawer3() {
     return Drawer(
       child: Column(
@@ -399,7 +339,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Align(
                           alignment: Alignment.center,
-                          child: Text('Drawer Header'),
+                          child: Text('My Canvases'),
                         ),
                         Align(
                           alignment: Alignment.topRight,
@@ -464,15 +404,9 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               IconButton(
-                icon: Icon(Icons.settings),
-                onPressed: () {
-                  _toggleDrawer(1);
-                },
-              ),
-              IconButton(
                 icon: Icon(Icons.account_circle),
                 onPressed: () {
-                  _toggleDrawer(2);
+                  _toggleDrawer(1);
                 },
               ),
             ],
