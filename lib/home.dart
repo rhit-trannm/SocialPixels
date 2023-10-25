@@ -78,7 +78,6 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDrawer() {
     List<Widget> drawers = [
       _buildDrawer1(),
-      _buildDrawer2(),
       _buildDrawer3(),
     ];
 
@@ -91,10 +90,6 @@ class _HomePageState extends State<HomePage> {
         Offstage(
           offstage: _currentDrawerIndex != 1,
           child: drawers[1],
-        ),
-        Offstage(
-          offstage: _currentDrawerIndex != 2,
-          child: drawers[2],
         ),
       ],
     );
@@ -231,15 +226,9 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.settings),
-                  onPressed: () {
-                    _toggleDrawer(1);
-                  },
-                ),
-                IconButton(
                   icon: Icon(Icons.account_circle),
                   onPressed: () {
-                    _toggleDrawer(2);
+                    _toggleDrawer(1);
                   },
                 ),
               ],
