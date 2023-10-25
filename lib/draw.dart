@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
@@ -108,6 +109,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   late StreamSubscription<QuerySnapshot> _canvasSubscription;
   final int threshold = 10;
   int totalPoints = 1;
+  Color currentColor = Colors.black;
   @override
   void initState() {
     super.initState();
@@ -133,6 +135,38 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       }).toList();
       setState(() {});
     });
+  }
+
+  void _openColorPicker() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color!'),
+          content: SingleChildScrollView(
+            child: HueRingPicker(
+              pickerColor: currentColor,
+              onColorChanged: (Color color) {
+                setState(() {
+                  currentColor = color;
+                });
+              },
+              enableAlpha: false,
+              displayThumbColor: true,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -165,32 +199,46 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanDown: (details) {
-        // When the user starts drawing, add a new empty line
-        lines.add(Line(points: []));
-      },
-      onPanUpdate: (details) {
-        final renderBox = context.findRenderObject() as RenderBox;
-        final localPosition = renderBox.globalToLocal(details.globalPosition);
-        if (totalPoints % threshold == 0) {
-          lines.last.points.add(localPosition);
-          totalPoints = 1;
-        } else {
-          totalPoints++;
-        }
-        // Only add the point to the last line, since it's initialized in onPanDown
-        // lines.last.points.add(localPosition);
-        setState(() {});
-      },
-      onPanEnd: (details) {
-        _addLineToFirestore(lines.last, currentCanvas.id);
-      },
-      child: CustomPaint(
-        painter: DrawingPainter(lines: lines),
-        child: Container(),
+    return Stack(children: [
+      GestureDetector(
+        onPanDown: (details) {
+          // When the user starts drawing, add a new empty line with the current color
+          lines.add(Line(points: [], color: currentColor));
+        },
+        onPanUpdate: (details) {
+          final renderBox = context.findRenderObject() as RenderBox;
+          final localPosition = renderBox.globalToLocal(details.globalPosition);
+          if (totalPoints % threshold == 0) {
+            lines.last.points.add(localPosition);
+            totalPoints = 1;
+          } else {
+            totalPoints++;
+          }
+          // Only add the point to the last line, since it's initialized in onPanDown
+          // lines.last.points.add(localPosition);
+          setState(() {});
+        },
+        onPanEnd: (details) {
+          _addLineToFirestore(lines.last, currentCanvas.id);
+        },
+        child: Container(
+          decoration: BoxDecoration(color: Colors.white),
+          child: CustomPaint(
+            painter: DrawingPainter(lines: lines),
+            child: Container(),
+          ),
+        ),
       ),
-    );
+      Positioned(
+        right: 10,
+        bottom: 10,
+        child: FloatingActionButton(
+          backgroundColor: currentColor,
+          onPressed: _openColorPicker,
+          child: Icon(Icons.color_lens, color: Colors.white),
+        ),
+      ),
+    ]);
   }
 }
 
