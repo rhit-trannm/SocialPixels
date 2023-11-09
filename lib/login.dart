@@ -25,6 +25,7 @@ class AuthService {
         'email': email,
         'uuid': userCredential.user!.uid,
         'friends': [], // an empty list of friends to begin with
+        'profileURL': 'gs://socialpixels-dca76.appspot.com/download.png'
       });
       await _firestore
           .collection('users')
@@ -44,6 +45,21 @@ class AuthService {
     } catch (e) {
       print(e.toString());
       return null;
+    }
+  }
+
+  User? getCurrentUser() {
+    return _auth.currentUser;
+  }
+
+  Future<void> updateUserProfile(String displayName, String? imageUrl) async {
+    User? currentUser = getCurrentUser();
+    if (currentUser != null) {
+      await currentUser.updateDisplayName(displayName);
+      await _firestore.collection('users').doc(currentUser.uid).update({
+        'displayName': displayName,
+        if (imageUrl != null) 'profileURL': imageUrl,
+      });
     }
   }
 

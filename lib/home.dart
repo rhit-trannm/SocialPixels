@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:namer_app/draw.dart';
 import 'package:namer_app/friend.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:namer_app/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -192,20 +193,21 @@ class _HomePageState extends State<HomePage> {
                                           final canvas =
                                               canvasSnapshot.data![canvasIndex];
                                           return ListTile(
-                                              title: Text(canvas.name),
-                                              onTap: () {
-                                                setState(() {
-                                                  _canvasID = null;
-                                                });
-                                                setState(() {
-                                                  _canvasID = canvas.id;
-                                                  a = DrawingCanvas(
-                                                      canvasID: _canvasID!,
-                                                      uid: friend['uid']);
-                                                  print(_canvasID);
-                                                });
-                                                Navigator.of(context).pop();
+                                            title: Text(canvas.name),
+                                            onTap: () {
+                                              setState(() {
+                                                _canvasID = null;
                                               });
+                                              setState(() {
+                                                _canvasID = canvas.id;
+                                                a = DrawingCanvas(
+                                                    canvasID: _canvasID!,
+                                                    uid: friend['uid']);
+                                                print(_canvasID);
+                                              });
+                                              Navigator.of(context).pop();
+                                            },
+                                          );
                                         },
                                       );
                                     }
@@ -239,6 +241,15 @@ class _HomePageState extends State<HomePage> {
                     _toggleDrawer(1);
                   },
                 ),
+                IconButton(
+                  icon: Icon(Icons.account_circle),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfilePage()),
+                    );
+                  },
+                )
               ],
             ),
           ),
@@ -384,6 +395,14 @@ class _HomePageState extends State<HomePage> {
                                 });
                                 Navigator.of(context).pop();
                               },
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () {
+                                  setState(() {
+                                    deleteCanvas(canvas.id);
+                                  });
+                                },
+                              ),
                             );
                           },
                         );

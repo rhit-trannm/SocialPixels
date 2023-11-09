@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_ui_storage/firebase_ui_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:namer_app/avatar_image.dart';
-import 'package:namer_app/auth_manager.dart';
-import 'package:namer_app/user_data_document_manager.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -15,46 +15,45 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  StreamSubscription? _userDataSubscription;
   final TextEditingController nameController = TextEditingController();
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   String? _updatedImageUrl;
+  String? _imageUrl;
+  String? _displayName;
 
   @override
   void initState() {
-    _userDataSubscription = UserDataDocumentManager.instance.startListening(
-      documentId: AuthManager.instance.uid,
-      observer: () {
-        setState(() {
-          nameController.text = UserDataDocumentManager.instance.displayName;
-          print("Display name ${UserDataDocumentManager.instance.displayName}");
-          print("Image URL ${UserDataDocumentManager.instance.imageUrl}");
-        });
-      },
-    );
     super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    User? _user = _authService.getCurrentUser();
+    if (_user != null) {
+      DocumentSnapshot userData = await _authService.fetchUserData(_user!.uid);
+      if (userData.exists && userData.data() is Map) {
+        // Cast the data to Map<String, dynamic> explicitly
+        Map<String, dynamic> dataMap = userData.data() as Map<String, dynamic>;
+        setState(() {
+          _imageUrl = dataMap['profileURL'];
+          nameController.text = dataMap['displayName'] ?? '';
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    UserDataDocumentManager.instance.stopListening(_userDataSubscription);
     nameController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    String imageUrl = UserDataDocumentManager.instance.imageUrl;
-
-    // If a new image has been uploaded use it instead!
-    if (_updatedImageUrl != null) {
-      imageUrl = _updatedImageUrl!;
-    }
-
     return Scaffold(
         appBar: AppBar(
           title: const Text("Edit Profile"),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -62,36 +61,12 @@ class _ProfilePageState extends State<ProfilePage> {
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(
-                  height: 20.0,
-                ),
-                AvatarImage(imageUrl: imageUrl),
-                const SizedBox(
-                  height: 4.0,
-                ),
-                UploadButton(
-                  metadata: SettableMetadata(contentType: "image/jpeg"),
-                  extensions: ['jpg', 'png'],
-                  mimeTypes: ['image/jpeg', 'image/png'],
-                  onError: (e, s) => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.toString()),
-                    ),
-                  ),
-                  onUploadComplete: (ref) async {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Upload complete"),
-                      ),
-                    );
-                    _updatedImageUrl = await ref.getDownloadURL();
-                    setState(() {});
-                  },
-                  variant: ButtonVariant.outlined,
-                ),
-                const SizedBox(
-                  height: 20.0,
-                ),
+                const SizedBox(height: 20.0),
+                if (_imageUrl != null) AvatarImage(imageUrl: _imageUrl!),
+                const SizedBox(height: 4.0),
+                // Your UploadButton logic here...
+                // Handle the image upload and URL updating logic here
+                const SizedBox(height: 20.0),
                 TextFormField(
                   controller: nameController,
                   decoration: const InputDecoration(
@@ -106,33 +81,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     return null;
                   },
                 ),
-                const SizedBox(
-                  height: 20.0,
-                ),
+                const SizedBox(height: 20.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+                      onPressed: () => Navigator.of(context).pop(),
                       child: const Text("Cancel"),
                     ),
                     TextButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          // Everything is Valid!
-                          await UserDataDocumentManager.instance.update(
-                              displayName: nameController.text,
-                              imageUrl: _updatedImageUrl);
+                          await _authService.updateUserProfile(
+                            nameController.text,
+                            _updatedImageUrl,
+                          );
                           Navigator.of(context).pop();
-                        } else {
-                          // Something is wrong
-                          // ScaffoldMessenger.of(context).showSnackBar(
-                          //   const SnackBar(
-                          //     content: Text("Add a display name"),
-                          //   ),
-                          // );
                         }
                       },
                       child: const Text("Save and Close"),

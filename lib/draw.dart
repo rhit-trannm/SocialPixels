@@ -67,6 +67,21 @@ Future<List<UCanvas>> fetchCanvases() async {
   }).toList();
 }
 
+Future<void> deleteCanvas(String canvasId) async {
+  final user = _auth.currentUser;
+  if (user == null) {
+    throw Exception('User not authenticated');
+  }
+
+  // Delete the canvas from Firestore
+  await _firestore
+      .collection('users')
+      .doc(user.uid)
+      .collection('canvases')
+      .doc(canvasId)
+      .delete();
+}
+
 Future<String> createCanvas(String canvasName) async {
   final user = _auth.currentUser;
   if (user == null) {
