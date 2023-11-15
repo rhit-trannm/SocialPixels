@@ -149,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                       primary: Color.fromRGBO(69, 49, 109, 1)),
                   onPressed: () async {
                     var user =
-                        await _authService.login("2@gmail.com", "1234567");
+                        await _authService.login(_emailController.text, _passwordController.text);
                     if (user != null) {
                       Navigator.push(
                         context,

@@ -61,7 +61,6 @@ Future<List<UCanvas>> fetchCanvases() async {
       ownerId: doc.data()['ownerId'],
     );
 
-    print('Canvas Name: ${canvas.name}');
 
     return canvas;
   }).toList();
@@ -128,12 +127,13 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   @override
   void initState() {
     super.initState();
-    currentCanvas = UCanvas(id: widget.canvasID, name: '', ownerId: '');
+    print("Opening canvas belong to" + widget.uid + "/n" + "current uid: " + FirebaseAuth.instance.currentUser!.uid);
+    currentCanvas = UCanvas(id: widget.canvasID, name: '', ownerId: widget.uid);
     _canvasSubscription = FirebaseFirestore.instance
         .collection('users')
         .doc(widget.uid)
         .collection('canvases')
-        .doc(currentCanvas.id)
+        .doc(widget.canvasID)
         .collection('lines')
         .orderBy('timestamp')
         .snapshots()
@@ -202,7 +202,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     try {
       await _firestore
           .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .doc(widget.uid)
           .collection('canvases')
           .doc(canvasId)
           .collection('lines')
@@ -264,7 +264,6 @@ class DrawingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (var line in lines) {
-      print(line.points.length);
       if (line.points.isEmpty) continue;
       final paint = Paint()
         ..color = line.color

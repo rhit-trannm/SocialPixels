@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
                           width: MediaQuery.of(context).size.width * 0.3,
                           child: FittedBox(
                             fit: BoxFit.contain,
-                            child: Image.asset('logo.png'),
+                            child: Image.asset('assets/logo.png'),
                           ),
                         ),
                       ],
