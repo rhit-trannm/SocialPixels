@@ -61,7 +61,6 @@ Future<List<UCanvas>> fetchCanvases() async {
       ownerId: doc.data()['ownerId'],
     );
 
-
     return canvas;
   }).toList();
 }
@@ -127,7 +126,10 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   @override
   void initState() {
     super.initState();
-    print("Opening canvas belong to" + widget.uid + "/n" + "current uid: " + FirebaseAuth.instance.currentUser!.uid);
+    print("Opening canvas belong to" +
+        widget.uid +
+        "current uid: " +
+        FirebaseAuth.instance.currentUser!.uid);
     currentCanvas = UCanvas(id: widget.canvasID, name: '', ownerId: widget.uid);
     _canvasSubscription = FirebaseFirestore.instance
         .collection('users')

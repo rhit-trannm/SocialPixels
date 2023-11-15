@@ -170,8 +170,7 @@ class _HomePageState extends State<HomePage> {
                             final friend = snapshot.data![index];
                             return ExpansionTile(
                               title: Text(friend['displayName']),
-                              subtitle:
-                                  Text(friend['email'] + " " + friend["uid"]),
+                              subtitle: Text(friend['email']),
                               children: <Widget>[
                                 FutureBuilder<List<UCanvas>>(
                                   future: fetchFriendCanvases(friend['uid']),
@@ -195,11 +194,7 @@ class _HomePageState extends State<HomePage> {
                                           final canvas =
                                               canvasSnapshot.data![canvasIndex];
                                           return ListTile(
-                                            title: Text(canvas.name +
-                                                " " +
-                                                canvas.id +
-                                                " " +
-                                                canvas.ownerId),
+                                            title: Text(canvas.name),
                                             onTap: () {
                                               setState(() {
                                                 _canvasID = null;
