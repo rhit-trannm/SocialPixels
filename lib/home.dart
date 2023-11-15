@@ -13,6 +13,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentDrawerIndex = 0;
   String? _canvasID;
+  String? _CanvasUID;
   late DrawingCanvas a;
   @override
   Widget build(BuildContext context) {
@@ -46,8 +47,8 @@ class _HomePageState extends State<HomePage> {
             ? a = DrawingCanvas(
                 key: ValueKey(_canvasID),
                 canvasID: _canvasID!,
-                uid: FirebaseAuth.instance.currentUser!
-                    .uid) // If _canvasID is set, create a new DrawingCanvas widget
+                uid:
+                    _CanvasUID!) // If _canvasID is set, create a new DrawingCanvas widget
             : Stack(
                 // Else, show original content
                 children: <Widget>[
@@ -169,7 +170,8 @@ class _HomePageState extends State<HomePage> {
                             final friend = snapshot.data![index];
                             return ExpansionTile(
                               title: Text(friend['displayName']),
-                              subtitle: Text(friend['email']),
+                              subtitle:
+                                  Text(friend['email'] + " " + friend["uid"]),
                               children: <Widget>[
                                 FutureBuilder<List<UCanvas>>(
                                   future: fetchFriendCanvases(friend['uid']),
@@ -193,13 +195,19 @@ class _HomePageState extends State<HomePage> {
                                           final canvas =
                                               canvasSnapshot.data![canvasIndex];
                                           return ListTile(
-                                            title: Text(canvas.name),
+                                            title: Text(canvas.name +
+                                                " " +
+                                                canvas.id +
+                                                " " +
+                                                canvas.ownerId),
                                             onTap: () {
                                               setState(() {
                                                 _canvasID = null;
+                                                _CanvasUID = null;
                                               });
                                               setState(() {
                                                 _canvasID = canvas.id;
+                                                _CanvasUID = friend['uid'];
                                                 a = DrawingCanvas(
                                                     canvasID: _canvasID!,
                                                     uid: friend['uid']);
@@ -387,6 +395,8 @@ class _HomePageState extends State<HomePage> {
                                 });
                                 setState(() {
                                   _canvasID = canvas.id;
+                                  _CanvasUID =
+                                      FirebaseAuth.instance.currentUser!.uid;
                                   a = DrawingCanvas(
                                     canvasID: _canvasID!,
                                     uid: FirebaseAuth.instance.currentUser!.uid,
@@ -536,9 +546,11 @@ class _HomePageState extends State<HomePage> {
               genCanvasId = await createCanvas(name);
               setState(() {
                 _canvasID = null;
+                _CanvasUID = null;
               });
               setState(() {
                 _canvasID = genCanvasId;
+                _CanvasUID = FirebaseAuth.instance.currentUser!.uid;
                 a = DrawingCanvas(
                     canvasID: _canvasID!,
                     uid: FirebaseAuth.instance.currentUser!.uid);
