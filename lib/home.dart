@@ -48,10 +48,8 @@ class _HomePageState extends State<HomePage> {
             ? a = DrawingCanvas(
                 key: ValueKey(_canvasID),
                 canvasID: _canvasID!,
-                uid:
-                    _CanvasUID!) // If _canvasID is set, create a new DrawingCanvas widget
+                uid: _CanvasUID!)
             : Stack(
-                // Else, show original content
                 children: <Widget>[
                   Center(
                     child: Column(
