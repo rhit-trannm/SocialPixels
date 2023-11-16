@@ -19,14 +19,17 @@ class UCanvas {
 }
 
 class Line {
-  final List<Offset> points;
-  final Color color;
-  final double strokeWidth;
+  List<Offset> points;
+  Color color;
+  double strokeWidth;
+  String? firestoreDocId; // Add this line
 
-  Line(
-      {required this.points,
-      this.color = Colors.black,
-      this.strokeWidth = 5.0});
+  Line({
+    required this.points,
+    this.color = Colors.black,
+    this.strokeWidth = 5.0,
+    this.firestoreDocId, // Initialize this field
+  });
 }
 
 String _generateCanvasId(String email) {
@@ -119,6 +122,7 @@ class DrawingCanvas extends StatefulWidget {
 class _DrawingCanvasState extends State<DrawingCanvas> {
   List<Line> lines = [];
   late UCanvas currentCanvas;
+  bool isEraserActive = false;
   late StreamSubscription<QuerySnapshot> _canvasSubscription;
   final int threshold = 10;
   int totalPoints = 1;
@@ -148,6 +152,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
               .toList(),
           color: Color(int.parse(data['color'])),
           strokeWidth: data['strokeWidth'].toDouble(),
+          firestoreDocId: data['firestoreDocId'].toString(),
         );
       }).toList();
       setState(() {});
@@ -199,19 +204,63 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
           line.points.map((point) => {'x': point.dx, 'y': point.dy}).toList(),
       'color': line.color.value.toString(),
       'strokeWidth': line.strokeWidth,
-      'timestamp': FieldValue.serverTimestamp(), //timestamp
+      'timestamp': FieldValue.serverTimestamp(),
+      //timestamp
     };
     try {
-      await _firestore
+      DocumentReference docRef = await _firestore
           .collection('users')
           .doc(widget.uid)
           .collection('canvases')
           .doc(canvasId)
           .collection('lines')
           .add(lineData);
+      await _firestore
+          .collection('users')
+          .doc(widget.uid)
+          .collection('canvases')
+          .doc(canvasId)
+          .collection('lines')
+          .doc(docRef.id)
+          .update({'firestoreDocId': docRef.id});
+      line.firestoreDocId = docRef.id; // Store the document ID
     } catch (e) {
       print('Error adding line to Firestore: $e');
     }
+  }
+
+  void _eraseLinesAtPosition(Offset position) {
+    const eraseRadius = 10.0; // Adjust as needed for the eraser size
+
+    setState(() {
+      List<Line> linesToRemove = [];
+      lines.removeWhere((line) {
+        for (final point in line.points) {
+          if ((point - position).distance <= eraseRadius) {
+            linesToRemove.add(line);
+            return true;
+          }
+        }
+        return false;
+      });
+      print("GET HERE");
+      // Delete lines from Firestore
+      for (var line in linesToRemove) {
+        print("GET HERE2: " + linesToRemove.length.toString());
+        print("GET HERE3: " + line.firestoreDocId.toString()!);
+        if (line.firestoreDocId != null) {
+          print("Line: " + line.firestoreDocId!);
+          _firestore
+              .collection('users')
+              .doc(widget.uid)
+              .collection('canvases')
+              .doc(currentCanvas.id)
+              .collection('lines')
+              .doc(line.firestoreDocId)
+              .delete();
+        }
+      }
+    });
   }
 
   @override
@@ -220,23 +269,30 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       GestureDetector(
         onPanDown: (details) {
           // When the user starts drawing, add a new empty line with the current color
-          lines.add(Line(points: [], color: currentColor));
+          if (!isEraserActive) {
+            lines.add(Line(points: [], color: currentColor));
+          }
         },
         onPanUpdate: (details) {
           final renderBox = context.findRenderObject() as RenderBox;
           final localPosition = renderBox.globalToLocal(details.globalPosition);
-          if (totalPoints % threshold == 0) {
-            lines.last.points.add(localPosition);
-            totalPoints = 1;
+
+          if (isEraserActive) {
+            _eraseLinesAtPosition(localPosition);
           } else {
-            totalPoints++;
+            if (totalPoints % threshold == 0) {
+              lines.last.points.add(localPosition);
+              totalPoints = 1;
+            } else {
+              totalPoints++;
+            }
+            setState(() {});
           }
-          // Only add the point to the last line, since it's initialized in onPanDown
-          // lines.last.points.add(localPosition);
-          setState(() {});
         },
         onPanEnd: (details) {
-          _addLineToFirestore(lines.last, currentCanvas.id);
+          if (!isEraserActive) {
+            _addLineToFirestore(lines.last, currentCanvas.id);
+          }
         },
         child: Container(
           decoration: BoxDecoration(color: Colors.white),
@@ -253,6 +309,20 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
           backgroundColor: currentColor,
           onPressed: _openColorPicker,
           child: Icon(Icons.color_lens, color: Colors.white),
+        ),
+      ),
+      Positioned(
+        right: 10,
+        bottom:
+            80, // This positions the erase button below the color picker button
+        child: FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              isEraserActive = !isEraserActive;
+            });
+          },
+          child: Icon(isEraserActive ? Icons.delete : Icons.brush),
+          backgroundColor: isEraserActive ? Colors.grey : Colors.blue,
         ),
       ),
     ]);

@@ -6,6 +6,7 @@ import 'package:namer_app/avatar_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_ui_storage/firebase_ui_storage.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -62,10 +63,31 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               children: [
                 const SizedBox(height: 20.0),
-                if (_imageUrl != null) AvatarImage(imageUrl: _imageUrl!),
+                if (_imageUrl != null)
+                  AvatarImage(imageUrl: _imageUrl!)
+                else
+                  AvatarImage(imageUrl: ''),
                 const SizedBox(height: 4.0),
-                // Your UploadButton logic here...
-                // Handle the image upload and URL updating logic here
+                UploadButton(
+                  metadata: SettableMetadata(contentType: "image/jpeg"),
+                  extensions: ['jpg', 'png'],
+                  mimeTypes: ['image/jpeg', 'image/png'],
+                  onError: (e, s) => ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                    ),
+                  ),
+                  onUploadComplete: (ref) async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Upload complete"),
+                      ),
+                    );
+                    _updatedImageUrl = await ref.getDownloadURL();
+                    setState(() {});
+                  },
+                  variant: ButtonVariant.outlined,
+                ),
                 const SizedBox(height: 20.0),
                 TextFormField(
                   controller: nameController,

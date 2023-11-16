@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:namer_app/login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:namer_app/firebase_options.dart';
+import 'package:firebase_ui_storage/firebase_ui_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseUIStorage.configure(
+    FirebaseUIStorageConfiguration(
+      storage: FirebaseStorage.instance,
+      namingPolicy: const UuidFileUploadNamingPolicy(),
+    ),
   );
   runApp(MyApp());
 }

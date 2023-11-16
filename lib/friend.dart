@@ -54,11 +54,9 @@ Future<List<Map<String, dynamic>>> fetchFriendRequests() async {
       .collection('friendRequests')
       .get();
 
-
   // This line maps each document to its data and then converts the result into a list
   return querySnapshot.docs.map((doc) => doc.data()).toList();
 }
-
 
 Future<List<Map<String, dynamic>>> fetchFriends() async {
   List<Map<String, dynamic>> friendList = [];
@@ -99,6 +97,7 @@ Future<List<Map<String, dynamic>>> fetchFriends() async {
         'displayName': friendData['displayName'],
         'email': friendData['email'],
         'uid': friendUID,
+        'profileURL': friendData['profileURL']
       });
     }
   }
@@ -115,11 +114,18 @@ Future<void> acceptFriendRequest(
   CollectionReference users = _firestore.collection('users');
   return _firestore.runTransaction((transaction) async {
     // Remove requester's UID from the current user's friendRequests list
-    transaction.delete(users.doc(currentUserUID).collection('friendRequests').doc(requesterUID));
+    transaction.delete(users
+        .doc(currentUserUID)
+        .collection('friendRequests')
+        .doc(requesterUID));
     // Add requester's UID to the current user's friends list
-    transaction.update(users.doc(currentUserUID), {'friends': FieldValue.arrayUnion([requesterUID])});
+    transaction.update(users.doc(currentUserUID), {
+      'friends': FieldValue.arrayUnion([requesterUID])
+    });
     // Add the current user's UID to the requester's friends list
-    transaction.update(users.doc(requesterUID), {'friends': FieldValue.arrayUnion([currentUserUID])});
+    transaction.update(users.doc(requesterUID), {
+      'friends': FieldValue.arrayUnion([currentUserUID])
+    });
   });
 }
 
@@ -131,6 +137,9 @@ Future<void> denyFriendRequest(
   return _firestore.runTransaction((transaction) async {
     // Remove requester's UID from the current user's friendRequests list
 
-    transaction.delete(users.doc(currentUserUID).collection('friendRequests').doc(requesterUID));
+    transaction.delete(users
+        .doc(currentUserUID)
+        .collection('friendRequests')
+        .doc(requesterUID));
   });
 }

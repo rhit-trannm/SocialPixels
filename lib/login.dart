@@ -25,7 +25,7 @@ class AuthService {
         'email': email,
         'uuid': userCredential.user!.uid,
         'friends': [], // an empty list of friends to begin with
-        'profileURL': 'gs://socialpixels-dca76.appspot.com/download.png'
+        'profileURL': ''
       });
       await _firestore
           .collection('users')
@@ -148,8 +148,8 @@ class _LoginPageState extends State<LoginPage> {
                   style: ElevatedButton.styleFrom(
                       primary: Color.fromRGBO(69, 49, 109, 1)),
                   onPressed: () async {
-                    var user =
-                        await _authService.login(_emailController.text, _passwordController.text);
+                    var user = await _authService.login(
+                        _emailController.text, _passwordController.text);
                     if (user != null) {
                       Navigator.push(
                         context,

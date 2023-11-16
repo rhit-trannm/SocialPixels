@@ -3,6 +3,7 @@ import 'package:namer_app/draw.dart';
 import 'package:namer_app/friend.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:namer_app/profile_page.dart';
+import 'package:namer_app/avatar_image.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -24,7 +25,7 @@ class _HomePageState extends State<HomePage> {
         title: Text('Home Page'),
         leading: IconButton(
           icon: Icon(Icons.menu),
-          onPressed: () => _openDrawer(),
+          onPressed: () => {_openDrawer()},
         ),
       ),
       drawer: _buildDrawer(),
@@ -75,6 +76,7 @@ class _HomePageState extends State<HomePage> {
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
+    _toggleDrawer(0);
   }
 
   // build the drawer (left panel).
@@ -169,8 +171,23 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index) {
                             final friend = snapshot.data![index];
                             return ExpansionTile(
-                              title: Text(friend['displayName']),
-                              subtitle: Text(friend['email']),
+                              title: Row(
+                                children: <Widget>[
+                                  if (friend['profileURL'] != null &&
+                                      friend['profileURL'].isNotEmpty)
+                                    AvatarImage(
+                                      imageUrl: friend['profileURL'],
+                                      radius: 15.0,
+                                    )
+                                  else
+                                    AvatarImage(
+                                      imageUrl: '',
+                                      radius: 15,
+                                    ),
+                                  SizedBox(width: 15),
+                                  Text(friend['displayName']),
+                                ],
+                              ),
                               children: <Widget>[
                                 FutureBuilder<List<UCanvas>>(
                                   future: fetchFriendCanvases(friend['uid']),
@@ -233,13 +250,13 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  icon: Icon(Icons.home),
+                  icon: Icon(Icons.people_alt),
                   onPressed: () {
                     _toggleDrawer(0);
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.account_circle),
+                  icon: Icon(Icons.brush),
                   onPressed: () {
                     _toggleDrawer(1);
                   },
@@ -288,7 +305,6 @@ class _HomePageState extends State<HomePage> {
                       return ListTile(
                         leading: Icon(Icons.person),
                         title: Text(request['displayName']),
-                        subtitle: Text(request['email']),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -344,25 +360,28 @@ class _HomePageState extends State<HomePage> {
             child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
-                  DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.center,
-                          child: Text('My Canvases'),
-                        ),
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: IconButton(
-                            icon: Icon(Icons.add, color: Colors.white),
-                            onPressed: _buildAddCanvasDialog,
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.15,
+                    child: DrawerHeader(
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Text('My Canvases'),
                           ),
-                        ),
-                      ],
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              icon: Icon(Icons.add, color: Colors.white),
+                              onPressed: _buildAddCanvasDialog,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   FutureBuilder<List<UCanvas>>(
@@ -418,22 +437,34 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                icon: Icon(Icons.home),
-                onPressed: () {
-                  _toggleDrawer(0);
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.account_circle),
-                onPressed: () {
-                  _toggleDrawer(1);
-                },
-              ),
-            ],
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.people_alt),
+                  onPressed: () {
+                    _toggleDrawer(0);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.brush),
+                  onPressed: () {
+                    _toggleDrawer(1);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.account_circle),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfilePage()),
+                    );
+                  },
+                )
+              ],
+            ),
           ),
         ],
       ),
@@ -514,13 +545,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SizedBox(height: 16.0), // Spacing
-          TextField(
-            controller: emailController,
-            decoration: InputDecoration(
-              labelText: 'Invite via Email Address',
-            ),
-            keyboardType: TextInputType.emailAddress,
-          ),
         ],
       ),
       actions: [
@@ -534,9 +558,7 @@ class _HomePageState extends State<HomePage> {
           child: Text('Submit'),
           onPressed: () async {
             String name = nameController.text;
-            String email = emailController.text;
             late String genCanvasId;
-            print('Name: $name, Email: $email');
             try {
               genCanvasId = await createCanvas(name);
               setState(() {
@@ -552,15 +574,10 @@ class _HomePageState extends State<HomePage> {
                 print(_canvasID);
               });
               Navigator.of(context).pop();
-              // setState(() {
-              //   Navigator.of(context).pop(); // Close the dialog.
-              // });
             } catch (error) {
-              // Handle the error e.g. by showing an error message to the user
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Failed to create canvas: $error')));
             }
-            // Navigator.of(context).pop(); // Close the dialog.
           },
         ),
       ],
